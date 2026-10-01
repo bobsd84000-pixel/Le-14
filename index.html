@@ -1,282 +1,295 @@
 <!DOCTYPE html>
-<!--
-  Shop Bijoux · UI Design System (agent 🎨 UI Designer · msitarzewski/agency-agents · MIT)
-
-  FONDATIONS
-  Couleurs (OKLCH) : fond, surface, ligne, encre, encre2 · or = aplat bouton, or-trait = texte/filets/focus
-    Thème base = nuit prune · thème clair = papier argenté (or-trait assombri)
-  Contraste : WCAG AA mesuré, 0 échec texte dans les 2 thèmes
-  Typo : Young Serif (titres, prix) / IBM Plex Sans (texte) · échelle 13-14-15-16-18-22-24-28-30-34 px + h2/h1 fluides
-  Tactile : --cible 44 px appliqué à tous les boutons, liens, champs, sélecteurs
-  Rayons : pilule 999 · carte 6 · champ 4 · photo 2
-
-  COMPOSANTS & ÉTATS
-  Boutons : .cta (plein or) · .ajouter (contour or) · .details-lien (lien) · .theme-toggle · .fermer · .qte
-    États : hover, focus-visible (anneau or-trait), disabled (Valider si panier vide)
-  Formulaire : input / textarea / select · requis · taille bague obligatoire avant ajout
-  Retours : panier vide · avis démo avant saisie · récapitulatif après commande · « Photo indisponible »
-  Galerie : 3 catégories (Bagues seules 9 · Portées 13 · Looks 4) + filtres aria-pressed · visionneuse <dialog> : ‹ › · balayage · zoom ×2 · Échap
-  Chargement : fond --photo-fond sous chaque photo · width/height fixés (pas de saut) · lazy galerie · srcset 400/800/1200
-
-  RESPONSIVE
-  Point de rupture unique 760 px (hero 1 colonne, nav texte masquée) · testé 1280 / 390 / 320 px sans débordement
-  Panier : défile en entier (clavier iPhone) · inert quand fermé · focus sur × à l'ouverture, retour à la fermeture
-  Mouvement : prefers-reduced-motion coupe transitions et défilement doux
-
-  LIMITES CONNUES
-  Espacements pas encore sur une échelle 4 px en tokens · prix = hypothèse · clavier iPhone testé en simulation
-  Photos : Pexels « silver ring », intégrées dans le fichier (aucun lien externe), crédits en bas de galerie
--->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shop Bijoux</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<script>
-/* pré-peinture : thème appliqué avant tout rendu (DESIGN.md §3) */
-(function(){
-  var saved = null;
-  try { saved = localStorage.getItem('theme'); } catch(e) {}
-  var p = new URLSearchParams(location.search).get('theme');
-  var t = p || saved || 'base';
-  if (t !== 'base') document.documentElement.dataset.theme = t;
-})();
-</script>
 <style>
-/* Écrin sombre : une vitrine de nuit, l'or réservé aux prix et aux actions */
-/* base : nuit prune. --or = aplat (fonds de bouton), --or-trait = premier plan (texte, filets, focus) */
-:root{
-  color-scheme:dark;
-  --fond:oklch(0.184 0.025 299);--surface:oklch(0.224 0.032 301);--ligne:oklch(0.329 0.04 305);
-  --encre:oklch(0.96 0.013 82);--encre2:oklch(0.771 0.03 306);
-  --or:oklch(0.767 0.137 82);--or-trait:oklch(0.767 0.137 82);--or-fonce:oklch(0.203 0.031 305);
-  --entete-bg:oklch(0.184 0.025 299 / .92);--voile:oklch(0 0 0 / .6);--fond-dialog:oklch(0 0 0 / .7);
-  --photo-fond:oklch(0 0 0);
-  --ombre-hero:0 30px 80px oklch(0 0 0 / .6),0 0 0 1px oklch(0.767 0.137 82 / .35);
-  --ombre-filet:0 0 0 1px var(--ligne);
-  --cible:44px;--r-pilule:999px;--r-carte:6px;--r-photo:2px;--r-champ:4px;
-  --t-xs:13px;--t-s:14px;--t-m:15px;--t-base:16px;--t-ico:18px;--t-lead:clamp(17px,2vw,20px);
-  --t-merci:22px;--t-groupe:22px;--t-logo:24px;--t-h3:28px;--t-prix:30px;--t-fiche:34px;
-  --t-h2:clamp(32px,4.5vw,48px);--t-h1:clamp(44px,7vw,84px);
-  --titre:"Young Serif",Georgia,serif;--texte:"IBM Plex Sans",system-ui,sans-serif;
-}
-/* clair : papier argenté froid, l'or s'assombrit en premier plan pour tenir AA */
-html[data-theme="clair"]{
-  color-scheme:light;
-  --fond:oklch(0.965 0.01 300);--surface:oklch(0.925 0.018 300);--ligne:oklch(0.84 0.025 300);
-  --encre:oklch(0.21 0.03 300);--encre2:oklch(0.44 0.03 300);
-  --or:oklch(0.70 0.15 78);--or-trait:oklch(0.47 0.11 75);
-  --entete-bg:oklch(0.965 0.01 300 / .92);--voile:oklch(0.21 0.03 300 / .45);--fond-dialog:oklch(0.21 0.03 300 / .5);
-  --photo-fond:oklch(0.90 0.012 300);
-  --ombre-hero:0 30px 80px oklch(0.21 0.03 300 / .18),0 0 0 1px oklch(0.47 0.11 75 / .35);
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--fond);color:var(--encre);font:400 var(--t-base)/1.6 var(--texte)}
-img{max-width:100%;display:block}
-a{color:inherit}
-button{font:inherit;color:inherit;cursor:pointer}
-p{text-wrap:pretty}
-:focus-visible{outline:2px solid var(--or-trait);outline-offset:3px}
-.conteneur{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,4vw,32px)}
-h1,h2,h3{font-family:var(--titre);font-weight:400;text-wrap:balance;margin:0}
-.etiquette{font-size:var(--t-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--or-trait)}
-
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--entete-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--ligne)}
-header .conteneur{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
-.logo{font:400 var(--t-logo) var(--titre);text-decoration:none;display:inline-flex;align-items:center;min-height:var(--cible)}
-nav{display:flex;gap:24px;align-items:center}
-nav a{text-decoration:none;color:var(--encre2);font-size:var(--t-m);display:inline-flex;align-items:center;min-height:var(--cible)}
-nav a:hover{color:var(--encre)}
-.theme-toggle{display:grid;place-items:center;min-width:var(--cible);height:var(--cible);padding:0 14px;font-size:var(--t-s);background:none;border:1px solid var(--ligne);border-radius:var(--r-pilule);color:var(--encre2)}
-.theme-toggle:hover{color:var(--encre);border-color:var(--encre2)}
-.btn-panier{display:flex;align-items:center;gap:8px;min-height:var(--cible);background:none;border:1px solid var(--or-trait);border-radius:var(--r-pilule);padding:8px 16px;font-size:var(--t-m)}
-.compteur{background:var(--or);color:var(--or-fonce);border-radius:var(--r-pilule);min-width:22px;height:22px;display:inline-grid;place-items:center;font-size:var(--t-xs);font-weight:600;padding:0 6px}
-
-.hero{padding-block:clamp(48px,9vw,110px) clamp(40px,6vw,72px);display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(24px,5vw,64px);align-items:center}
-.hero h1{font-size:var(--t-h1);line-height:1.02;margin-top:14px}
-.hero p{color:var(--encre2);font-size:var(--t-lead);max-width:44ch;margin:20px 0 32px}
-.hero .visuel{position:relative;aspect-ratio:4/5;max-width:100%}
-.hero .visuel img{background:var(--photo-fond);position:absolute;border-radius:var(--r-photo);object-fit:cover;box-shadow:var(--ombre-hero)}
-.hero .v1{inset:0 18% 22% 0;width:82%;height:78%}
-.hero .v2{right:0;bottom:0;width:52%;height:48%}
-.cta{display:inline-flex;align-items:center;gap:10px;background:var(--or);color:var(--or-fonce);border:0;border-radius:var(--r-pilule);padding:14px 28px;font-weight:600;font-size:var(--t-base);text-decoration:none}
-.cta:hover{filter:brightness(1.08)}
-
-.avantages{border-block:1px solid var(--ligne)}
-.avantages .conteneur{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:12px 48px;padding-block:18px;color:var(--encre2);font-size:var(--t-m)}
-.avantages b{color:var(--encre);font-weight:500}
-
-section{padding-block:clamp(56px,8vw,96px)}
-.entete{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px;margin-bottom:32px}
-.entete h2{font-size:var(--t-h2);margin-top:8px}
-.entete p{color:var(--encre2);margin:0;max-width:46ch}
-
-.produits{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:28px}
-.produit{background:var(--surface);border:1px solid var(--ligne);border-radius:var(--r-carte);overflow:hidden;display:flex;flex-direction:column}
-.produit .photo{aspect-ratio:4/3;overflow:hidden;background:var(--photo-fond)}
-.produit .photo img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
-.produit:hover .photo img{transform:scale(1.05)}
-.produit .infos{padding:22px 24px 24px;display:flex;flex-direction:column;gap:10px;flex:1}
-.produit h3{font-size:var(--t-h3)}
-.produit p{color:var(--encre2);margin:0}
-.produit .bas{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:auto;padding-top:12px}
-.prix{font:400 var(--t-prix) var(--titre);color:var(--or-trait);font-variant-numeric:tabular-nums}
-.ajouter{min-height:var(--cible);background:none;border:1px solid var(--or-trait);color:var(--encre);border-radius:var(--r-pilule);padding:10px 20px;font-weight:500}
-.ajouter:hover{background:var(--or);color:var(--or-fonce)}
-.details-lien{display:inline-flex;align-items:center;min-height:var(--cible);background:none;border:0;padding:0;color:var(--encre2);text-decoration:underline;text-underline-offset:3px;font-size:var(--t-s);align-self:flex-start}
-
-.galerie{columns:4 220px;column-gap:16px}
-.galerie figure{background:var(--photo-fond);margin:0 0 16px;break-inside:avoid;border-radius:var(--r-photo);overflow:hidden;box-shadow:var(--ombre-filet)}
-.galerie img{display:block;width:100%;height:auto}
-@media (max-width:760px){.galerie{columns:2;column-gap:8px}.galerie figure{margin-bottom:8px}}
-.img-ko{display:grid!important;place-items:center;min-height:120px;color:var(--encre2);font-size:var(--t-xs);background:var(--photo-fond)}
-.img-ko img{display:none}
-.img-ko::after{content:"Photo indisponible"}
-.note{color:var(--encre2);font-size:var(--t-s);margin-top:8px}
-
-footer{border-top:1px solid var(--ligne);padding-block:32px;color:var(--encre2);font-size:var(--t-s)}
-footer .conteneur{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
-
-.voile{position:fixed;inset:0;background:var(--voile);z-index:30;opacity:0;pointer-events:none;transition:opacity .3s}
-.voile.ouvert{opacity:1;pointer-events:auto}
-.tiroir{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--surface);border-left:1px solid var(--ligne);z-index:31;transform:translateX(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px))}
-.tiroir{overflow-y:auto;overscroll-behavior:contain}
-.tiroir.ouvert{transform:none}
-.tiroir .haut{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.tiroir h2{font-size:var(--t-h3)}
-.fermer{background:none;border:1px solid var(--ligne);border-radius:var(--r-pilule);width:var(--cible);height:var(--cible);flex-shrink:0;font-size:var(--t-ico)}
-.lignes{flex:1 0 auto;display:flex;flex-direction:column;gap:14px}
-.ligne{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center}
-.ligne img{width:56px;height:56px;object-fit:cover;border-radius:var(--r-photo)}
-.ligne .nom{font-weight:500}
-.ligne .pu{color:var(--encre2);font-size:var(--t-s);font-variant-numeric:tabular-nums}
-.qte{display:flex;align-items:center;gap:4px}
-.qte button{width:var(--cible);height:var(--cible);border-radius:var(--r-pilule);border:1px solid var(--ligne);background:none}
-.qte span{min-width:18px;text-align:center;font-variant-numeric:tabular-nums}
-.vide{color:var(--encre2);text-align:center;padding:40px 0}
-.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--ligne);padding-top:16px;margin-top:16px}
-.total strong{font:400 var(--t-h3) var(--titre);color:var(--or-trait);font-variant-numeric:tabular-nums}
-.petit{color:var(--encre2);font-size:var(--t-xs);margin:6px 0 14px}
-form{display:flex;flex-direction:column;gap:10px}
-label{font-size:var(--t-xs);color:var(--encre2)}
-input,textarea{min-height:var(--cible);width:100%;background:var(--fond);border:1px solid var(--ligne);border-radius:var(--r-champ);padding:10px 12px;color:var(--encre);font:inherit}
-textarea{resize:vertical;min-height:64px}
-.cta[disabled]{opacity:.45;cursor:not-allowed}
-.merci{background:var(--fond);border:1px solid var(--or-trait);border-radius:var(--r-carte);padding:16px;margin-top:12px}
-.merci h3{font-size:var(--t-merci);margin-bottom:6px}
-.merci p{margin:0;color:var(--encre2);font-size:var(--t-s)}
-
-dialog{border:1px solid var(--ligne);border-radius:var(--r-carte);background:var(--surface);color:var(--encre);padding:0;width:min(860px,calc(100% - 32px));max-height:calc(100% - 32px)}
-dialog::backdrop{background:var(--fond-dialog)}
-.fiche{display:grid;grid-template-columns:1fr 1fr}
-.fiche img{width:100%;height:100%;object-fit:cover;min-height:280px}
-.fiche .txt{padding:28px;display:flex;flex-direction:column;gap:12px}
-.fiche h3{font-size:var(--t-fiche)}
-.fiche ul{margin:0;padding-left:18px;color:var(--encre2)}
-.fiche .fermer{align-self:flex-end}
-
-.taille{display:flex;flex-direction:column;gap:4px}
-select{min-height:var(--cible);background:var(--fond);border:1px solid var(--ligne);border-radius:var(--r-champ);padding:8px 10px;color:var(--encre);font:inherit}
-.avis-demo{background:var(--fond);border:1px solid var(--ligne);border-radius:var(--r-champ);padding:10px 12px;color:var(--encre2);font-size:var(--t-xs);margin:0 0 14px}
-
-@media (max-width:760px){
-  nav a{display:none}
-  .hero{grid-template-columns:1fr}
-  .hero .visuel{max-width:420px}
-  .fiche{grid-template-columns:1fr}
-  .fiche img{max-height:300px}
-}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
-/* galerie classée + filtres */
-.filtres{display:flex;flex-wrap:wrap;gap:8px}
-.chip{min-height:var(--cible);padding:0 18px;background:none;border:1px solid var(--ligne);border-radius:var(--r-pilule);color:var(--encre);font-size:var(--t-s);font-weight:500}
-.chip .nb{margin-left:8px;font-weight:400;color:var(--encre2)}
-.chip[aria-pressed=true]{background:var(--or);border-color:var(--or);color:var(--or-fonce)}
-.chip[aria-pressed=true] .nb{color:inherit}
-.groupe{margin-top:36px}
-.groupe h3{font-size:var(--t-groupe);margin-bottom:16px;display:flex;align-items:baseline;gap:10px}
-.groupe h3 .nb{font:400 var(--t-s) var(--texte);color:var(--encre2)}
-.zoom{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in}
-.galerie .zoom:focus-visible{outline-offset:-3px}
-.produit .photo{position:relative;cursor:zoom-in}
-.loupe{position:absolute;right:12px;bottom:12px;min-height:var(--cible);padding:0 18px;background:var(--entete-bg);color:var(--encre);border:1px solid var(--ligne);border-radius:var(--r-pilule);font-size:var(--t-s);font-weight:500;backdrop-filter:blur(6px)}
-/* visionneuse : toujours sombre, quel que soit le thème */
-html.zoom-ouvert{overflow:hidden}
-dialog.zoom-dialog{--fond:oklch(0.14 0.022 299);--ligne:oklch(0.45 0.04 305);--encre:oklch(0.96 0.013 82);--encre2:oklch(0.80 0.03 306);--or-trait:oklch(0.767 0.137 82);
-  inset:0;margin:0;width:100%;max-width:100%;height:100%;height:100dvh;max-height:100%;max-height:100dvh;border:0;border-radius:0;background:var(--fond);color:var(--encre);
-  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
-dialog.zoom-dialog[open]{display:flex;flex-direction:column}
-dialog.zoom-dialog::backdrop{background:oklch(0 0 0)}
-.zoom-barre{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 12px}
-.zoom-compteur{font-size:var(--t-s);color:var(--encre2);font-variant-numeric:tabular-nums}
-.zoom-actions{display:flex;align-items:center;gap:8px}
-#zoom-loupe,.zoom-pied .nav{min-height:var(--cible);background:none;border:1px solid var(--ligne);border-radius:var(--r-pilule);color:var(--encre);font-size:var(--t-s)}
-#zoom-loupe{padding:0 18px}
-#zoom-loupe[aria-pressed=true]{background:var(--or);border-color:var(--or);color:var(--or-fonce)}
-.zoom-pied .nav{width:var(--cible);flex-shrink:0;padding:0;font-size:var(--t-merci);line-height:1}
-.zoom-cadre{flex:1;min-height:0;display:flex;overflow:auto;overscroll-behavior:contain;touch-action:pan-x pan-y pinch-zoom}
-.zoom-cadre img{margin:auto;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;cursor:zoom-in;-webkit-user-select:none;user-select:none}
-.zoom-cadre.x2 img{max-width:none;max-height:none;width:200%;cursor:zoom-out}
-.zoom-pied{display:flex;align-items:center;gap:12px;padding:10px 12px 12px}
-.zoom-legende{flex:1;min-width:0;margin:0;text-align:center;font-size:var(--t-s);color:var(--encre2)}
-.zoom-legende strong{display:block;font-size:var(--t-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--or-trait);font-weight:400}
-.zoom-legende span{display:block;color:var(--encre)}
-.zoom-legende small{display:block;font-size:var(--t-xs);color:var(--encre2)}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f0f;--bg2:#1a1a1a;--text:#fff;--text2:#999;--border:#2a2a2a;--accent:#c9a961;--green:#4ade80;--blue:#3b82f6;--purple:#a855f7;--yellow:#eab308}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:100px}
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:1rem;position:sticky;top:0;z-index:100}
+.header-top{display:flex;justify-content:space-between;align-items:center}
+.hbtn{width:40px;height:40px;background:var(--border);border:none;color:var(--text);border-radius:50%;cursor:pointer;font-size:1.2rem}
+.header-title{font-size:1.1rem;font-weight:600}
+main{max-width:500px;margin:0 auto;padding:1rem}
+.view{display:none}.view.active{display:block}
+h1{font-size:2rem;margin:1rem 0 .5rem}
+h2{font-size:1.3rem;margin:.5rem 0}
+.description{color:var(--text2);margin-bottom:1.5rem;font-size:.95rem}
+.stats{display:flex;gap:2rem;margin:1.5rem 0;font-size:.9rem}
+.action-buttons{display:flex;gap:1rem;margin:1.5rem 0}
+.btn{flex:1;padding:.75rem 1rem;border:1px solid var(--border);background:var(--bg2);color:var(--text);border-radius:20px;cursor:pointer;font-size:.9rem}
+.btn:active{background:var(--border)}
+.btn.on{border-color:var(--accent);color:var(--accent)}
+.btn-icon{flex:0 0 48px;padding:0}
+.btn-gold{background:var(--accent);color:#000;border:none;font-weight:600;width:100%}
+.section{margin:2rem 0}
+.section-title{font-size:.85rem;color:var(--text2);margin-bottom:.5rem;text-transform:uppercase}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.card:active{border-color:var(--accent)}
+.card-left{display:flex;align-items:center;gap:1rem;flex:1}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.g{background:var(--green)}.b{background:var(--blue)}.p{background:var(--purple)}.y{background:var(--yellow)}.d{background:var(--border)}
+.card-text h3{font-size:1rem}
+.card-text p{font-size:.8rem;color:var(--text2)}
+.arrow{color:var(--text2);font-size:1.2rem}
+.box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin:1rem 0;font-size:.9rem}
+.box p{margin:.5rem 0}
+strong{color:var(--accent)}
+.credit{font-size:.75rem;color:var(--text2);margin:1rem 0}
+.ring{height:160px;border-radius:12px;background:linear-gradient(135deg,#2a2a2a,#1a1a1a);display:flex;align-items:center;justify-content:center;font-size:4rem;margin-bottom:1rem}
+select,input{width:100%;padding:.75rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;font-size:1rem;margin:.5rem 0}
+label{font-size:.85rem;color:var(--text2)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.look{aspect-ratio:1;justify-content:flex-end!important;padding:.6rem;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.5rem;color:#fff;font-size:.85rem;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.look::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.3);z-index:1}
+.look span{font-size:2.2rem;position:relative;z-index:2}
+.look-label{position:relative;z-index:2;text-align:center;font-weight:500}
+.chat{display:flex;flex-direction:column;gap:.6rem;margin:1rem 0;min-height:200px}
+.msg{max-width:85%;padding:.7rem 1rem;border-radius:16px;font-size:.92rem}
+.msg.bot{background:var(--bg2);border:1px solid var(--border);align-self:flex-start}
+.msg.me{background:var(--accent);color:#000;align-self:flex-end}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}
+.chip{padding:.5rem .9rem;border:1px solid var(--accent);color:var(--accent);background:none;border-radius:20px;cursor:pointer;font-size:.85rem}
+.row{display:flex;gap:.5rem}
+.row input{margin:0}
+.row button{width:56px;border:none;border-radius:10px;background:var(--accent);font-size:1.2rem;cursor:pointer}
+.item{display:flex;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid var(--border);font-size:.95rem}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;height:80px;z-index:200}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:.4rem;color:var(--text2);font-size:.75rem;cursor:pointer;background:none;border:none;position:relative}
+.nav-item.active{color:var(--blue)}
+.nav-icon{font-size:1.5rem}
+.badge{position:absolute;top:-4px;right:-8px;background:var(--accent);color:#000;border-radius:10px;font-size:.65rem;min-width:18px;height:18px;display:none;align-items:center;justify-content:center;font-weight:700}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#000;padding:.75rem 1.25rem;border-radius:20px;font-size:.9rem;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:300;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hero{height:230px;border-radius:16px;margin:1rem 0 0;cursor:pointer;display:flex;align-items:flex-end;padding:1rem;font-weight:600;color:var(--accent)}
+.look,.zoom{cursor:pointer}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:400;padding:1rem}
+.lb.show{display:flex}.lb img{max-width:100%;max-height:85vh;border-radius:12px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:350}
+.sheet-bg.show{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--bg2);border-top:1px solid var(--border);border-radius:20px 20px 0 0;padding:1rem 1rem 2rem;max-width:500px;margin:0 auto}
+.sheet button{display:block;width:100%;text-align:left;padding:.9rem;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer}
 </style>
+</head>
+<body>
 
 <header>
-  <div class="conteneur">
-    <a class="logo" href="#haut">Shop Bijoux</a>
-    <nav>
-      <a href="#collection">Collection</a>
-      <a href="#inspirations">Inspirations</a>
-      <button class="theme-toggle" id="themeToggle" type="button"></button>
-      <button class="btn-panier" id="ouvrir-panier" type="button" aria-label="Ouvrir le panier">Panier <span class="compteur" id="compteur">0</span></button>
-    </nav>
+  <div class="header-top">
+    <button class="hbtn" id="back">‹</button>
+    <span class="header-title" id="title">shop-bijoux</span>
+    <button class="hbtn" id="menu">⋯</button>
   </div>
 </header>
 
-<main id="haut">
-  <div class="conteneur hero">
-    <div>
-      <div class="etiquette">Idées cadeaux pour Noël</div>
-      <h1>Argent &amp; pierres</h1>
-      <p>Une bague rubis ovale entourée de pierres claires et une bague goutte en argent poli. Deux pièces à offrir, livrées dans leur écrin.</p>
-      <a class="cta" href="#collection">Voir la collection</a>
-    </div>
-    <div class="visuel" aria-hidden="true">
-      <!-- images hero en base64 ... -->
-    </div>
+<main>
+
+<!-- HOME -->
+<div class="view active" id="home" data-title="shop-bijoux">
+  <div class="hero" data-go="pieces" style="background:linear-gradient(to top,rgba(0,0,0,.65),transparent 60%),url(https://images.pexels.com/photos/1458867/pexels-photo-1458867.jpeg?auto=compress&cs=tinysrgb&w=600) center/cover"><span>Voir la collection ›</span></div>
+  <h1>shop-bijoux</h1>
+  <div class="description">Idées cadeaux pour Noël — Une bague rubis taille émeraude et une bague à pierre claire entourée d'un éclat de pierres navette. Deux pièces à offrir, livrées dans leur écrin.</div>
+  <div class="action-buttons">
+    <button class="btn" id="star">⭐ Star</button>
+    <button class="btn btn-icon" id="fork">🔀</button>
+    <button class="btn btn-icon" id="bell">🔔</button>
   </div>
 
-  <div class="avantages">
-    <div class="conteneur">
-      <span><b>Livraison offerte</b> en France</span>
-      <span><b>Écrin cadeau</b> inclus</span>
-      <span><b>Taille au choix</b> du 50 au 58</span>
-    </div>
+  <div class="section">
+    <div class="section-title">Collection</div>
+    <div class="card" data-go="pieces"><div class="card-left"><div class="card-icon g">💎</div><div class="card-text"><h3>Nos pièces</h3><p>Deux bagues en argent, prêtes à offrir</p></div></div><div class="arrow">›</div></div>
   </div>
 
-  <section id="collection">
-    <div class="conteneur">
-      <div class="entete">
-        <div><div class="etiquette">La collection</div><h2>Nos pièces</h2></div>
-        <p>Deux bagues en argent, prêtes à offrir.</p>
-      </div>
-      <div class="produits" id="produits"></div>
-    </div>
-  </section>
+  <div class="section">
+    <div class="section-title">Experts IA</div>
+    <div class="card" data-go="shopper"><div class="card-left"><div class="card-icon b">👤</div><div class="card-text"><h3>Personal Shopper</h3><p>Recommandations personnalisées selon votre style et budget</p></div></div><div class="arrow">›</div></div>
+    <div class="card" data-go="collector"><div class="card-left"><div class="card-icon p">💎</div><div class="card-text"><h3>Collector AI</h3><p>Conseils sur l'investissement, l'entretien et la valeur</p></div></div><div class="arrow">›</div></div>
+    <div class="card" data-go="help"><div class="card-left"><div class="card-icon y">💬</div><div class="card-text"><h3>Live Help</h3><p>Réponses rapides à vos questions sur les bijoux</p></div></div><div class="arrow">›</div></div>
+  </div>
 
-  <section id="inspirations">
-    <!-- galerie, filtres, catégories ... -->
-  </section>
+  <div class="section">
+    <div class="section-title">Lookbook</div>
+    <div class="card" data-go="lookbook"><div class="card-left"><div class="card-icon d">📸</div><div class="card-text"><h3>Portées du jour</h3><p>Comment nos clients portent nos bagues au quotidien</p></div></div><div class="arrow">›</div></div>
+    <div class="card" data-go="inspi"><div class="card-left"><div class="card-icon d">✨</div><div class="card-text"><h3>Un bijou pour chaque style</h3><p>Des idées pour porter l'argent au quotidien</p></div></div><div class="arrow">›</div></div>
+  </div>
+
+  <div class="box"><div class="ring zoom" style="background:url(https://images.pexels.com/photos/5442447/pexels-photo-5442447.jpeg?auto=compress&cs=tinysrgb&w=600) center/cover"></div><h2>Argent &amp; pierres</h2>
+    <p><strong>Livraison offerte</strong> en France · <strong>Écrin cadeau</strong> inclus · <strong>Taille au choix</strong> du 50 au 58</p>
+  </div>
+  <div class="credit">© Shop Bijoux · shopbijoux.fr · Bijoux en argent · Livraison offerte · Écrin cadeau</div>
+</div>
+
+<!-- PIECES -->
+<div class="view" id="pieces" data-title="Nos pièces">
+  <h1>Nos pièces</h1>
+  <div class="description">Deux bagues en argent, prêtes à offrir.</div>
+  <div class="box">
+    <div class="ring zoom" style="background:url(https://images.pexels.com/photos/1232931/pexels-photo-1232931.jpeg?auto=compress&cs=tinysrgb&w=600) center/cover"></div>
+    <h2>Bague rubis taille émeraude</h2>
+    <p>Écrin cadeau inclus · Livraison offerte en France</p>
+    <label>Taille</label>
+    <select class="size"><option>50</option><option>51</option><option>52</option><option>53</option><option>54</option><option>55</option><option>56</option><option>57</option><option>58</option></select>
+    <button class="btn btn-gold add" data-name="Bague rubis taille émeraude">Ajouter au panier</button>
+  </div>
+  <div class="box">
+    <div class="ring zoom" style="background:url(https://images.pexels.com/photos/3266703/pexels-photo-3266703.jpeg?auto=compress&cs=tinysrgb&w=600) center/cover"></div>
+    <h2>Bague pierre claire et pierres navette</h2>
+    <p>Écrin cadeau inclus · Livraison offerte en France</p>
+    <label>Taille</label>
+    <select class="size"><option>50</option><option>51</option><option>52</option><option>53</option><option>54</option><option>55</option><option>56</option><option>57</option><option>58</option></select>
+    <button class="btn btn-gold add" data-name="Bague pierre claire et pierres navette">Ajouter au panier</button>
+  </div>
+</div>
+
+<!-- EXPERTS -->
+<div class="view chatview" id="shopper" data-title="Personal Shopper" data-hello="Bonjour ! Dites-moi votre style et votre budget, je vous recommande une bague." data-chips="Style classique|Style moderne|Petit budget">
+  <h1>Personal Shopper</h1><div class="description">Recommandations personnalisées selon votre style et budget.</div>
+  <div class="chat"></div><div class="chips"></div>
+  <div class="row"><input placeholder="Votre message…"><button>➤</button></div>
+</div>
+<div class="view chatview" id="collector" data-title="Collector AI" data-hello="Bonjour ! Posez-moi vos questions sur l'investissement, l'entretien ou la valeur de vos bijoux." data-chips="Entretien|Valeur|Investissement">
+  <h1>Collector AI</h1><div class="description">Conseils sur l'investissement, l'entretien et la valeur.</div>
+  <div class="chat"></div><div class="chips"></div>
+  <div class="row"><input placeholder="Votre message…"><button>➤</button></div>
+</div>
+<div class="view chatview" id="help" data-title="Live Help" data-hello="Bonjour ! Une question sur nos bijoux ? Je réponds vite." data-chips="Livraison|Tailles|Écrin cadeau">
+  <h1>Live Help</h1><div class="description">Réponses rapides à vos questions sur les bijoux.</div>
+  <div class="chat"></div><div class="chips"></div>
+  <div class="row"><input placeholder="Votre message…"><button>➤</button></div>
+</div>
+
+<!-- LOOKBOOK -->
+<div class="view" id="lookbook" data-title="Portées du jour">
+  <h1>Portées du jour</h1><div class="description">Comment nos clients portent nos bagues au quotidien.</div>
+  <div class="grid">
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Bague portée</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1191536/pexels-photo-1191536.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Bracelet porté</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1721937/pexels-photo-1721937.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Boucles en main</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/265906/pexels-photo-265906.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Anneaux argent</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/10475789/pexels-photo-10475789.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Solitaire</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/691046/pexels-photo-691046.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Pierre claire</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1457801/pexels-photo-1457801.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Duo de pierres</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/2849742/pexels-photo-2849742.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Éclat rosé</span></div>
+  </div>
+</div>
+
+<!-- INSPI -->
+<div class="view" id="inspi" data-title="Inspirations">
+  <h1>Un bijou pour chaque style</h1><div class="description">Des idées pour porter l'argent au quotidien.</div>
+  <div class="grid">
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1395306/pexels-photo-1395306.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Élégant</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/2735970/pexels-photo-2735970.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Moderne</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/3641056/pexels-photo-3641056.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Tendance</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1413420/pexels-photo-1413420.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Coloré</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/5370657/pexels-photo-5370657.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Minimal</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/5370706/pexels-photo-5370706.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Lumineux</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/3641059/pexels-photo-3641059.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Doré</span></div>
+    <div class="look" style="background-image:linear-gradient(135deg,rgba(0,0,0,.4),rgba(0,0,0,.4)),url('https://images.pexels.com/photos/1616096/pexels-photo-1616096.jpeg?auto=compress&cs=tinysrgb&w=600')"><span class="look-label">Bohème</span></div>
+  </div>
+  <div class="credit">Photos d'ambiance : ces bijoux ne sont pas en vente. Photos Pexels.</div>
+</div>
+
+<!-- PANIER -->
+<div class="view" id="cart" data-title="Votre panier">
+  <h1>Votre panier</h1>
+  <div class="box" id="items"><p style="color:var(--text2)">Panier vide.</p></div>
+  <div class="box"><p>Total <strong>0 €</strong></p><p>Livraison offerte · Écrin cadeau inclus</p>
+    <p style="color:var(--text2);font-size:.8rem">Boutique de démonstration : la commande n'est pas transmise et le paiement n'est pas encore branché.</p></div>
+  <label>Nom et prénom</label><input id="nom">
+  <label>E-mail</label><input id="mail" type="email">
+  <label>Adresse de livraison</label><input id="adr">
+  <button class="btn btn-gold" id="recap" style="margin-top:1rem">Récapitulatif prêt</button>
+  <div class="box" id="recapbox" style="display:none"></div>
+</div>
+
 </main>
 
-<footer>
-  <div class="conteneur">
-    <span>© Shop Bijoux · shopbijoux.fr</span>
-    <span>Bijoux en argent · Livraison offerte · Écrin cadeau</span>
-  </div>
-</footer>
+<nav class="bottom-nav">
+  <button class="nav-item active" data-nav="home"><span class="nav-icon">🏠</span>Home</button>
+  <button class="nav-item" data-nav="cart"><span class="nav-icon">🛒</span>Panier<span class="badge" id="badge">0</span></button>
+  <button class="nav-item" data-nav="pieces"><span class="nav-icon">🔍</span>Explore</button>
+  <button class="nav-item" data-nav="help"><span class="nav-icon">💬</span>Chat</button>
+</nav>
 
-<!-- voile, tiroir panier, dialog fiche, dialog zoom ... -->
+<div class="lb" id="lb"><img id="lbimg" alt=""></div>
+<div class="sheet-bg" id="sheet"><div class="sheet">
+  <button data-m="pieces">💎 Nos pièces</button><button data-m="cart">🛒 Panier</button><button data-m="lookbook">📸 Portées du jour</button><button data-m="inspi">✨ Inspirations</button><button data-m="shopper">👤 Personal Shopper</button><button data-m="collector">💎 Collector AI</button><button data-m="help">💬 Live Help</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var stack=['home'],cart=[],tt;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show')},1800)}
+function show(id,push){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});
+  var v=document.getElementById(id);v.classList.add('active');
+  document.getElementById('title').textContent=v.dataset.title;
+  if(push)stack.push(id);
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.nav===stack[0])});
+  if(v.classList.contains('chatview')&&!v.dataset.init)initChat(v);
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('[data-go]').forEach(function(c){c.onclick=function(){show(c.dataset.go,true)}});
+document.querySelectorAll('[data-nav]').forEach(function(n){n.onclick=function(){stack=[n.dataset.nav];show(n.dataset.nav,false)}});
+document.getElementById('back').onclick=function(){if(stack.length>1){stack.pop();show(stack[stack.length-1],false)}else toast('Accueil')};
+document.getElementById('menu').onclick=function(){toast('Panier : '+cart.length+' article(s)')};
+['star','fork','bell'].forEach(function(id){var b=document.getElementById(id);b.onclick=function(){b.classList.toggle('on');var on=b.classList.contains('on');
+  if(id==='star'){b.textContent=on?'⭐ Starred':'⭐ Star'}toast(({star:'Star',fork:'Fork',bell:'Notifications'})[id]+(on?' activé':' désactivé'))}});
+
+// Panier
+function renderCart(){
+  var el=document.getElementById('items'),bd=document.getElementById('badge');
+  el.innerHTML=cart.length?cart.map(function(c,i){return '<div class="item"><span>'+c.name+' · taille '+c.size+'</span><span onclick="rm('+i+')" style="cursor:pointer">✕</span></div>'}).join(''):'<p style="color:var(--text2)">Panier vide.</p>';
+  bd.textContent=cart.length;bd.style.display=cart.length?'flex':'none';
+}
+function rm(i){cart.splice(i,1);renderCart()}
+document.querySelectorAll('.add').forEach(function(b){b.onclick=function(){
+  var size=b.parentNode.querySelector('.size').value;cart.push({name:b.dataset.name,size:size});renderCart();toast('Ajouté · taille '+size)}});
+document.getElementById('recap').onclick=function(){
+  var n=document.getElementById('nom').value.trim(),m=document.getElementById('mail').value.trim(),a=document.getElementById('adr').value.trim();
+  if(!cart.length)return toast('Panier vide');
+  if(!n||!m||!a)return toast('Remplissez les 3 champs');
+  var r=document.getElementById('recapbox');r.style.display='block';
+  r.innerHTML='<strong>Récapitulatif prêt</strong><p>'+n+' · '+m+'</p><p>'+a+'</p><p>'+cart.map(function(c){return c.name+' (taille '+c.size+')'}).join('<br>')+'</p><p style="color:var(--text2);font-size:.8rem">Démonstration : commande non transmise.</p>';
+};
+
+// Chats
+var answers={
+  shopper:{'Style classique':'La bague rubis taille émeraude, élégante et intemporelle.','Style moderne':'La bague à pierre claire entourée de pierres navette, plus éclatante.','Petit budget':'Dites-moi votre budget, je vous oriente vers la pièce la plus adaptée.','def':'Merci ! Dites-moi votre style (classique ou moderne) et votre budget.'},
+  collector:{'Entretien':'Rangez-la dans son écrin, à l\'abri de l\'humidité, et nettoyez-la avec un chiffon doux.','Valeur':'La valeur dépend de l\'argent, des pierres et de leur état de conservation.','Investissement':'Un bijou en argent est avant tout une pièce à porter et à offrir.','def':'Je peux vous conseiller sur l\'entretien, la valeur ou l\'investissement.'},
+  help:{'Livraison':'La livraison est offerte en France.','Tailles':'Les bagues sont disponibles du 50 au 58.','Écrin cadeau':'Chaque bague est livrée dans son écrin cadeau, inclus.','def':'Je peux répondre sur la livraison, les tailles ou l\'écrin cadeau.'}
+};
+function say(v,t,cls){var c=v.querySelector('.chat'),d=document.createElement('div');d.className='msg '+cls;d.textContent=t;c.appendChild(d)}
+function ask(v,q){say(v,q,'me');var a=answers[v.id];setTimeout(function(){say(v,a[q]||a.def,'bot')},400)}
+function initChat(v){
+  v.dataset.init=1;say(v,v.dataset.hello,'bot');
+  var ch=v.querySelector('.chips');
+  v.dataset.chips.split('|').forEach(function(q){var b=document.createElement('button');b.className='chip';b.textContent=q;b.onclick=function(){ask(v,q)};ch.appendChild(b)});
+  var inp=v.querySelector('input'),btn=v.querySelector('.row button');
+  function send(){var q=inp.value.trim();if(!q)return;inp.value='';ask(v,q)}
+  btn.onclick=send;inp.onkeydown=function(e){if(e.key==='Enter')send()};
+}
+
+// Menu ⋯
+var sh=document.getElementById('sheet');
+document.getElementById('menu').onclick=function(){sh.classList.add('show')};
+sh.onclick=function(e){if(e.target===sh)sh.classList.remove('show')};
+sh.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){sh.classList.remove('show');show(b.dataset.m,true)}});
+// Agrandir les photos
+var lb=document.getElementById('lb'),lbi=document.getElementById('lbimg');
+document.querySelectorAll('.look,.zoom').forEach(function(el){el.onclick=function(){var m=getComputedStyle(el).backgroundImage.match(/url\("?(https:[^")]+)"?\)/);if(m){lbi.src=m[1];lb.classList.add('show')}}});
+lb.onclick=function(){lb.classList.remove('show')};
+// Partager
+document.getElementById('fork').onclick=function(){var u=location.href;
+  if(navigator.share){navigator.share({title:'Shop Bijoux',url:u}).catch(function(){})}
+  else if(navigator.clipboard){navigator.clipboard.writeText(u).then(function(){toast('Lien copié')},function(){toast('Copie impossible')})}
+  else toast('Partage indisponible')};
+// Notifications
+var bell=document.getElementById('bell');
+bell.onclick=function(){
+  if(!('Notification' in window)){bell.classList.toggle('on');return toast(bell.classList.contains('on')?'Alertes activées':'Alertes désactivées')}
+  Notification.requestPermission().then(function(p){var ok=p==='granted';bell.classList.toggle('on',ok);toast(ok?'Alertes activées':'Alertes refusées')})};
+</script>
+</body>
+</html>
